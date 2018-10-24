@@ -8,7 +8,7 @@
 
 输出结果为一个.js文件.
 
-TypeScript里的**类型注解**是一种轻量级的为函数或变量添加约束的方式。
+> TypeScript 只会进行静态检查，如果发现有错误，编译的时候就会报错。如果要在报错的时候终止 js 文件的生成，可以在 tsconfig.json 中配置 noEmitOnError 即可。
 
 ## 接口
 
@@ -55,7 +55,15 @@ ts里面声明变量：let isDone: boolean = false
 
 > 基本类型：
 
-1. 布尔
+1. 布尔: 
+    
+    使用构造函数 Boolean 创造的对象不是布尔值,new Boolean() 返回的是一个 Boolean 对象
+    直接调用 Boolean 也可以返回一个 boolean 类型：
+
+        let createdByBoolean: boolean = Boolean(1);
+
+    在 TypeScript 中，boolean 是 JavaScript 中的基本类型，而 Boolean 是 JavaScript 中的构造函数。其他基本类型（除了 null 和 undefined）一样。
+
 2. 数字
 3. 字符串(支持模板字符串)
 4. 数组
@@ -63,6 +71,8 @@ ts里面声明变量：let isDone: boolean = false
         let list: number[] = [1, 2, 3]; // 由此类型元素组成的一个数组
 
         let list: Array<number> = [1, 2, 3]; // 数组泛型
+
+    类数组（Array-like Object）不是数组类型，比如 arguments
 
 5. 元组类型允许表示一个已知元素数量和类型的数组，各元素的类型不必相同。
 
@@ -87,10 +97,15 @@ ts里面声明变量：let isDone: boolean = false
 
     在一个字符串枚举里，每个成员都必须用字符串字面量，或另外一个字符串枚举成员进行初始化。
 
-7. Any: 不希望类型检查器对这些值进行检查而是直接让它们通过编译阶段的检查。 那么我们可以使用`any`类型来标记这些变量。Object类型的变量只是允许你给它赋任意值 - 但是却不能够在它上面调用任意的方法，即便它真的有这些方法。
-    > 声明一个变量为任意值之后，对它的任何操作，返回的内容的类型都是任意值。
-    > 变量如果在声明的时候，未指定其类型，那么它会被识别为任意值类型。
-    > 如果定义的时候没有赋值，不管之后有没有赋值，都会被推断成 any 类型而完全不被类型检查
+7. Any:
+    
+    **任意值**用来表示允许赋值为任意类型。
+
+    不希望类型检查器对这些值进行检查而是直接让它们通过编译阶段的检查。 那么我们可以使用`any`类型来标记这些变量。Object类型的变量只是允许你给它赋任意值 - 但是却不能够在它上面调用任意的方法，即便它真的有这些方法。
+
+    > 1. 声明一个变量为任意值之后，对它的任何操作，返回的内容的类型都是任意值。
+    > 2. 变量如果在声明的时候，未指定其类型，那么它会被识别为任意值类型。
+    > 3. 如果定义的时候没有赋值，不管之后有没有赋值，都会被推断成 any 类型而完全不被类型检查
 8. 某种程度上来说，void类型像是与any类型相反，它表示没有任何类型。 当一个函数没有返回值时，你通常会见到其返回值类型是 void。声明一个void类型的变量没有什么大用，因为你只能为它赋予undefined和null
 9.  TypeScript里，undefined和null两者各自有自己的类型分别叫做undefined和null。默认情况下null和undefined是所有类型的子类型。指定了--strictNullChecks标记，null和undefined只能赋值给void和它们各自。
 10. never类型表示的是那些永不存在的值的类型。
@@ -127,6 +142,8 @@ TypeScript具有ReadonlyArray<T>类型，它与Array<T>相似，只是把所有�
         width?: number;
         [propName: string]: any;
     }
+
+**一旦定义了任意属性，那么确定属性和可选属性都必须是它的子属性.**
 
 接口能够描述JavaScript中对象拥有的各种各样的外形。 除了描述带有属性的普通对象外，接口也可以描述函数类型。
 
@@ -224,8 +241,6 @@ TypeScript具有ReadonlyArray<T>类型，它与Array<T>相似，只是把所有�
 **接口继承类**
 
 当接口继承了一个类类型时，它会继承类的成员但不包括其实现。 就好像接口声明了所有类中存在的成员，但并没有提供具体实现一样。 接口同样会继承到类的private和protected成员。 这意味着当你创建了一个接口继承了一个拥有私有或受保护的成员的类时，这个接口类型只能被这个类或其子类所实现（implement）。
-
-
 
 
 > http://www.css88.com/doc/typescript/doc/handbook/Enums.html

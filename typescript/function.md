@@ -13,7 +13,11 @@
 
 > ## 可选参数和默认参数
 
+**注意**，输入多余的（或者少于要求的）参数，是不被允许的。
+
 TypeScript里的每个函数参数都是必须的。 这不是指不能传递 null或undefined作为参数，而是说编译器检查用户是否为每个参数都传入了值。 传递给一个函数的参数个数必须与函数期望的参数个数一致。
+
+不同于ES6，在 TypeScript 的类型定义中，=> 用来表示`函数的定义`，左边是输入类型，需要用括号括起来，右边是输出类型。
 
 JavaScript里，每个参数都是可选的，可传可不传。 没传参的时候，它的值就是undefined。 在TypeScript里我们可以在参数名后使用 ?实现可选参数的功能。
 
@@ -102,5 +106,15 @@ JavaScript里，每个参数都是可选的，可传可不传。 没传参的时
 
 根据传入参数的不同会返回两种不同的类型。方法是**为同一个函数提供多个函数类型定义**来进行函数重载。 编译器会根据这个列表去处理函数的调用。 
 
-JS重载
+    function reverse(x: number): number;
+    function reverse(x: string): string;
+    function reverse(x: number | string): number | string {
+        if (typeof x === 'number') {
+            return Number(x.toString().split('').reverse().join(''));
+        } else if (typeof x === 'string') {
+            return x.split('').reverse().join('');
+        }
+    }
+
+
 
