@@ -15,7 +15,7 @@
 
 ## **HTMLElement.offsetParent**
 
-是一个只读属性，返回一个指向最近的包含该元素的定位元素。如果没有定位的元素，则 offsetParent 为最近的 table, table cell 或根元素（标准模式下为 html；quirks 模式下为 body）。
+是一个只读属性，返回一个指向最近的包含该元素的父容器。如果没有定位的元素，则 offsetParent 为最近的 table, table cell 或根元素（**标准模式下为 html；quirks 模式下为 body**）。
 
 当元素的 style.display 设置为 "none" 时，offsetParent 返回 null。offsetParent 很有用，因为 offsetTop 和 offsetLeft 都是相对于其内边距边界的。
 
@@ -25,8 +25,8 @@ MouseEvent 接口指用户与指针设备( 如鼠标 )交互时发生的事件�
 
 **只读属性**
 
-1. **MouseEvent.clientX:** 鼠标指针在可视区域中的X坐标
-2. **MouseEvent.clientY:** 鼠标指针在可视区域中的Y坐标
+1. **MouseEvent.clientX:** 返回当事件被触发时鼠标指针向对于浏览器页面（可视区域）的水平坐标。
+2. **MouseEvent.clientY:** 返回当事件被触发时鼠标指针向对于浏览器页面（可视区域）的垂直坐标。
 3. **MouseEvent.offsetX:** 鼠标指针相对于点击的元素内边位置的X坐标(padding以内)
 4. **MouseEvent.offsetY:** 鼠标指针相对于点击的元素内边位置的Y坐标(padding以内)
 5. **MouseEvent.screenX:** 鼠标指针相对于全局（屏幕）的X坐标
@@ -52,17 +52,37 @@ TouchEvent 是一类描述手指在触摸平面的状态变化的事件。这类
 
 **touchcancel**: 触摸中断(比如弹出框)
 
-## **其他属性**
+# **宽度属性**
 
-**offsetTop, offsetLeft**：要确定的这两个属性的值，首先得确定元素的offsetParent。offsetParent指的是距该元素最近的position不为static的祖先元素，如果没有则指向body元素。确定了offsetParent，offsetLeft指的是元素左侧偏移offsetParent的距离，同理offsetTop指的是上侧偏移的距离。
+## 视窗
 
-**offsetHeight, offsetWidth**：这两个属性返回的是元素的高度或宽度，包括元素的边框、内边距和滚动条。返回值是一个经过四舍五入的整数。
+`window.innerHeight` `window.outerHeight`：含页面标题栏
+
+获取视窗高度
+
+    document.documentElement.clientHeight
+    document.body.clientHeight
+
+## offset
+
+![图片描述](../Image/offset.jpg)
+
+**offsetParent**: 返回的是最近的已定位的父元素 - `注意，返回的是元素`
+
+**offsetTop**: 元素`(border以外)`距离已定位的offsetParent`(border以内)`的距离。offsetLeft同offsetTop
+
+**offsetHeight, offsetWidth**：这两个属性返回的是元素的高度或宽度，`包括元素的边框、内边距和滚动条`。返回值是一个经过四舍五入的整数。
+
+## 滚动
+
+**scrollTop, scrollLeft**：滚动过的像素。如果元素不能被滚动，则为0。
 
 **scrollHeight, scrollWidth**：只读属性。返回元素内容的整体尺寸，包括元素看不见的部分（需要滚动才能看见的）。返回值包括padding，但不包括margin和border。
 
+## client
+
 **clientHeight, clientWidth**：包括padding，但不包括border, margin和滚动条。
 
-**window.innerWidth, window.innerHeight**：只读。视口（viewport）的尺寸，包含滚动条
+**clientLeft, clientTop**: 边框宽度
 
-**scrollTop, scrollLeft**：如果元素不能被滚动，则为0。
-
+![图片描述](../Image/position.jpg)
