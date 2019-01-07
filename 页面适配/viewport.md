@@ -28,6 +28,14 @@
 
     当前缩放值=ideal viewport宽度/visual viewport宽度
 
+## **initial-scale**
+
+设置 initial-scale这条规则实际上做了如下2件事： 
+1、将页面初始缩放因子设置为给定的值，根据ideal viewport，计算得到visual viewport的宽。 
+2、**设置layout viewport的宽等于刚刚计算出来的visual viewport的宽。**
+
+现代浏览器中实现**缩放(scale)**的方式无怪乎都是「拉伸」像素。
+
 > ## 媒体查询
 
 在使用媒体查询时，width指的是layout viewport，device-width指的是移动设备屏幕的宽度，两者都是用CSS像素来衡量的。
