@@ -54,6 +54,3 @@ function clone (value) {
 ```
 
 `history/base/transitionTo`中的`this.current`就是START，通过createRoute来创建返回。注意返回的是通过Object.freeze定义的只读对象 route。
-
-
-

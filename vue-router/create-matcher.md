@@ -1,11 +1,6 @@
 ### 源码
 
 ```
-// 定义接口
-export type Matcher = {
-  match: (raw: RawLocation, current?: Route, redirectedFrom?: Location) => Route;
-  addRoutes: (routes: Array<RouteConfig>) => void;
-};
 
 // routes为我们初始化VueRouter的路由配置
 // router就是我们的VueRouter实例
@@ -42,6 +37,7 @@ export function createMatcher (
       }
       // 不存在记录 返回
       if (!record) return _createRoute(null, location)
+      // regex是路径的正则表达式，可以匹配符合基路径
       const paramNames = record.regex.keys
         .filter(key => !key.optional)
         .map(key => key.name)
@@ -49,7 +45,7 @@ export function createMatcher (
       if (typeof location.params !== 'object') {
         location.params = {}
       }
-
+      // 复制 currentRoute.params 到  location.params
       if (currentRoute && typeof currentRoute.params === 'object') {
         for (const key in currentRoute.params) {
           if (!(key in location.params) && paramNames.indexOf(key) > -1) {
@@ -57,13 +53,15 @@ export function createMatcher (
           }
         }
       }
-
+      // 如果存在 record 记录
       if (record) {
         location.path = fillParams(record.path, location.params, `named route "${name}"`)
         return _createRoute(record, location, redirectedFrom)
       }
     } else if (location.path) {
+      // 处理非命名路由
       location.params = {}
+      // 这里会遍历pathList，找到合适的record，因此命名路由的record查找效率更高
       for (let i = 0; i < pathList.length; i++) {
         const path = pathList[i]
         const record = pathMap[path]
@@ -157,17 +155,21 @@ export function createMatcher (
     return _createRoute(null, location)
   }
 
+  // _createRoute会根据RouteRecord执行相关的路由操作，最后返回Route对象
   function _createRoute (
     record: ?RouteRecord,
     location: Location,
     redirectedFrom?: Location
   ): Route {
+    // 重定向
     if (record && record.redirect) {
       return redirect(record, redirectedFrom || location)
     }
+    // 别名
     if (record && record.matchAs) {
       return alias(record, location, record.matchAs)
     }
+    // 普通路由
     return createRoute(record, location, redirectedFrom, router)
   }
 
@@ -206,4 +208,38 @@ function resolveRecordPath (path: string, record: RouteRecord): string {
   return resolvePath(path, record.parent ? record.parent.path : '/', true)
 }
 ```
+
+`pathList`、`pathMap`、`nameMap`这几个变量，他们是通过`createRouteMap`来创建的几个对象。
+
+`routes` 是我们定义的路由数组，可能是这样的：
+
+```
+const router = new VueRouter({
+  mode: 'history',
+  base: __dirname,
+  routes: [
+    { path: '/', name: 'home', component: Home },
+    { path: '/foo', name: 'foo', component: Foo },
+    { path: '/bar/:id', name: 'bar', component: Bar }
+  ]
+})
+```
+
+`createRouteMap`主要作用便是处理传入的routes属性，整理成3个对象：
+
+1. **nameMap**
+
+![nameMap](https://user-images.githubusercontent.com/21073039/40768109-edec6616-64e6-11e8-97af-dadb0b599d6e.png)
+
+2. **pathList**
+
+![pathList](https://user-images.githubusercontent.com/21073039/40768129-fd0bfca6-64e6-11e8-9c10-add34770b36a.png)
+
+3. **pathMap**
+
+![pathMap](https://user-images.githubusercontent.com/21073039/40768188-2c73ce1a-64e7-11e8-8bb6-0aa7697a9fbe.png)
+
+所以`match`的主要功能是通过目标路径匹配定义的 route 数据，根据匹配到的记录，来进行`_createRoute`操作。而`_createRoute`会根据`RouteRecord`执行相关的路由操作，最后返回Route对象：
+
+
 
