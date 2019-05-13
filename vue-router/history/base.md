@@ -27,11 +27,14 @@
     // 调用this.confirmTransition，执行路由转换
     this.confirmTransition(route, () => {
       // 跳转完成
+      // 更新 route
       this.updateRoute(route)
+      // 执行 onComplete
       onComplete && onComplete(route)
+      // 更新浏览器 url
       this.ensureURL()
 
-      // fire ready cbs once
+      // 调用 ready 的回调
       if (!this.ready) {
         this.ready = true
         this.readyCbs.forEach(cb => { cb(route) })
@@ -45,6 +48,18 @@
         this.ready = true
         this.readyErrorCbs.forEach(cb => { cb(err) })
       }
+    })
+  }
+
+  updateRoute (route: Route) {
+    const prev = this.current
+    // 当前路由更新
+    this.current = route
+    // cb 执行
+    this.cb && this.cb(route)
+    // 调用 afterEach 钩子
+    this.router.afterHooks.forEach(hook => {
+      hook && hook(route, prev)
     })
   }
 
@@ -101,11 +116,18 @@
     this.pending = route
     // 每一个队列执行的 iterator 函数
     const iterator = (hook: NavigationGuard, next) => {
+      // 如果当前处理的路由，已经不等于 route 则终止处理
       if (this.pending !== route) {
         return abort()
       }
       try {
+        // hook 是queue 中的钩子函数，在这里执行
         hook(route, current, (to: any) => {
+          // 参数就是钩子函数里的to，from，next
+          // 钩子函数外部执行的 next 方法
+          // next(false): 中断当前的导航。
+          // 如果浏览器的 URL 改变了 (可能是用户手动或者浏览器后退按钮)
+          // 那么 URL 地址会重置到 from 路由对应的地址。
           if (to === false || isError(to)) {
             // next(false) -> abort navigation, ensure current URL
             this.ensureURL(true)
@@ -117,7 +139,8 @@
               typeof to.name === 'string'
             ))
           ) {
-            // next('/') or next({ path: '/' }) -> redirect
+            // next('/') 或者 next({ path: '/' }): 跳转到一个不同的地址。
+            // 当前的导航被中断，然后进行一个新的导航。
             abort()
             if (typeof to === 'object' && to.replace) {
               this.replace(to)
@@ -138,17 +161,21 @@
     runQueue(queue, iterator, () => {
       const postEnterCbs = []
       const isValid = () => this.current === route
-      // wait until async components are resolved before
-      // extracting in-component enter guards
+      // 获取 beforeRouteEnter 钩子函数
       const enterGuards = extractEnterGuards(activated, postEnterCbs, isValid)
+      // 获取 beforeResolve 钩子函数 并合并生成另一个 queue
       const queue = enterGuards.concat(this.router.resolveHooks)
       runQueue(queue, iterator, () => {
+        // 处理完，就不需要再次执行
         if (this.pending !== route) {
           return abort()
         }
+        // 清空
         this.pending = null
+        // 调用onComplete
         onComplete(route)
         if (this.router.app) {
+          // nextTick 执行 postEnterCbs 所有回调
           this.router.app.$nextTick(() => {
             postEnterCbs.forEach(cb => { cb() })
           })
@@ -210,16 +237,7 @@ function bindGuard (guard: NavigationGuard, instance: ?_Vue): ?NavigationGuard {
   }
 }
 
-function extractEnterGuards (
-  activated: Array<RouteRecord>,
-  cbs: Array<Function>,
-  isValid: () => boolean
-): Array<?Function> {
-  return extractGuards(activated, 'beforeRouteEnter', (guard, _, match, key) => {
-    return bindEnterGuard(guard, match, key, cbs, isValid)
-  })
-}
-
+// 遍历matched里的components
 function extractGuards (
   records: Array<RouteRecord>,
   name: string,
@@ -227,6 +245,7 @@ function extractGuards (
   reverse?: boolean
 ): Array<?Function> {
   const guards = flatMapComponents(records, (def, instance, match, key) => {
+    // 获取组件的 beforeRouteLeave 钩子函数
     const guard = extractGuard(def, name)
     if (guard) {
       return Array.isArray(guard)
@@ -237,15 +256,106 @@ function extractGuards (
   return flatten(reverse ? guards.reverse() : guards)
 }
 
+// 创建一个Vue的子类获得他里面的钩子函数
 function extractGuard (
   def: Object | Function,
   key: string
 ): NavigationGuard | Array<NavigationGuard> {
   if (typeof def !== 'function') {
     // extend now so that global mixins are applied.
+    // 创建一个Vue的子类, .vue会被 vue-loader 转换成一个 options 对象
     def = _Vue.extend(def)
   }
   return def.options[key]
 }
+
+export function flatMapComponents (
+  matched: Array<RouteRecord>,
+  fn: Function
+): Array<?Function> {
+  return flatten(matched.map(m => {
+    // 遍历得到组件的 template, instance, match，和组件名
+    return Object.keys(m.components).map(key => fn(
+      m.components[key],
+      m.instances[key],
+      m, key
+    ))
+  }))
+}
+
+// 抹平数组得到一个一维数组
+export function flatten (arr: Array<any>): Array<any> {
+  return Array.prototype.concat.apply([], arr)
+}
+
+export function runQueue (queue: Array<?NavigationGuard>, fn: Function, cb: Function) {
+  const step = index => {
+    // 如果全部执行完成则执行回调函数 cb
+    if (index >= queue.length) {
+      cb()
+    } else {
+      // 如果存在对应的函数
+      if (queue[index]) {
+        // 这里的 fn 传过来的是个 iterator 函数
+        fn(queue[index], () => {
+          // 执行队列中的下一个元素
+          step(index + 1)
+        })
+      } else {
+        // 执行队列中的下一个元素
+        step(index + 1)
+      }
+    }
+  }
+  // 默认执行钩子队列中的第一个数据
+  step(0)
+}
+
 ```
+
+##### vue-router/src/util/resolve-components.js
+
+```
+// resolveAsyncComponents
+export function resolveAsyncComponents (matched: Array<RouteRecord>): Function {
+  // 返回“异步”钩子函数
+  return (to, from, next) => {
+    let hasAsync = false
+    let pending = 0
+    let error = null
+
+    flatMapComponents(matched, (def, _, match, key) => {
+      // 这里假定说路由上定义的组件是函数, 但是没有 options
+      // 就认为他是一个异步组件
+      // 这里并没有使用 Vue 默认的异步机制的原因是我们希望在得到真正的异步组件之前
+      // 整个的路由导航是一直处于挂起状态
+      if (typeof def === 'function' && def.cid === undefined) {
+        hasAsync = true
+        // ...
+      }
+    })
+
+    if (!hasAsync) next()
+  }
+}
+```
+
+这里主要是用来处理异步组件的问题，通过判断路由上定义的组件是函数且没有 options 来确定异步组件，然后在得到真正的异步组件之前将其路由挂起。
+
+
+---
+
+##### 流程
+
+1. 执行transitionTo函数，先得到需要跳转路由的 match 对象route
+2. 执行confirmTransition函数
+3. confirmTransition函数内部判断是否是需要跳转，如果不需要跳转，则直接中断返回
+4. confirmTransition判断如果是需要跳转，则先得到钩子函数的任务队列 queue
+5. 通过 runQueue 函数来批次执行任务队列中的每个方法。
+6. 在执 queue 的钩子函数的时候，通过iterator来构造迭代器由用户传入 next方法，确定执行的过程
+一直到整个队列执行完毕后，开始处理完成后的回调函数。
+
+处理完整个钩子函数队列之后将要执行的回调主要就是接入路由组件后期的钩子函数beforeRouteEnter和beforeResolve，并进行队列执行。一切处理完成后，开始执行transitionTo的回调函数onComplete
+
+
 

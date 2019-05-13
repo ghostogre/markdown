@@ -35,7 +35,7 @@ export function createMatcher (
       if (process.env.NODE_ENV !== 'production') {
         warn(record, `Route with name '${name}' does not exist`)
       }
-      // 不存在记录 返回
+      // 不存在记录则会返回
       if (!record) return _createRoute(null, location)
       // regex是路径的正则表达式，可以匹配符合基路径
       const paramNames = record.regex.keys
