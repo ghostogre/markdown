@@ -37,7 +37,8 @@ export function createMatcher (
       }
       // 不存在记录则会返回
       if (!record) return _createRoute(null, location)
-      // regex是路径的正则表达式，可以匹配符合基路径
+      // regex是路径的正则表达式
+      // 这里返回的paramNames是不属于/:foo形式
       const paramNames = record.regex.keys
         .filter(key => !key.optional)
         .map(key => key.name)
