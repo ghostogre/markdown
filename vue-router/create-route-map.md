@@ -149,7 +149,7 @@ function addRouteRecord (
 
 // 处理路由匹配正则表达式
 function compileRouteRegex (path: string, pathToRegexpOptions: PathToRegexpOptions): RouteRegExp {
-  // [] 是要使用路径中找到的键填充的数组
+  // [] 是要使用路径中找到的键填充的数组(就是keys)
   const regex = Regexp(path, [], pathToRegexpOptions)
   if (process.env.NODE_ENV !== 'production') {
     const keys: any = Object.create(null)
@@ -158,9 +158,9 @@ function compileRouteRegex (path: string, pathToRegexpOptions: PathToRegexpOptio
       keys[key.name] = true
     })
   }
-  // :就是可选项 optional: true
-  // /:foo
-  // keys = [{ name: 'foo', delimiter: '/', optional: false, repeat: true }]
+  // ( ? ), ( * ) 就是可选项 optional: true
+  // /:foo?
+  // keys = [{ name: 'foo', delimiter: '/', optional: true, repeat: true }]
   return regex
 }
 

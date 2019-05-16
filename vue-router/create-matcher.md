@@ -38,7 +38,7 @@ export function createMatcher (
       // 不存在记录则会返回
       if (!record) return _createRoute(null, location)
       // regex是路径的正则表达式
-      // 这里返回的paramNames是不属于/:foo形式
+      // 这里返回的paramNames是类似/:foo形式
       const paramNames = record.regex.keys
         .filter(key => !key.optional)
         .map(key => key.name)
@@ -49,6 +49,8 @@ export function createMatcher (
       // 复制 currentRoute.params 到  location.params
       if (currentRoute && typeof currentRoute.params === 'object') {
         for (const key in currentRoute.params) {
+          // !(key in location.params)是防止重复的params，例如/:foo/:foo
+          // params是用于传参的!
           if (!(key in location.params) && paramNames.indexOf(key) > -1) {
             location.params[key] = currentRoute.params[key]
           }
@@ -56,6 +58,7 @@ export function createMatcher (
       }
       // 如果存在 record 记录
       if (record) {
+        // 将params填充进URL
         location.path = fillParams(record.path, location.params, `named route "${name}"`)
         return _createRoute(record, location, redirectedFrom)
       }
@@ -180,6 +183,7 @@ export function createMatcher (
   }
 }
 
+// 匹配路由正则表达式
 function matchRoute (
   regex: RouteRegExp,
   path: string,
@@ -189,10 +193,11 @@ function matchRoute (
 
   if (!m) {
     return false
-  } else if (!params) {
+  } else if (!params) { // 如果不用处理params直接返回
     return true
   }
 
+  // 处理params
   for (let i = 1, len = m.length; i < len; ++i) {
     const key = regex.keys[i - 1]
     const val = typeof m[i] === 'string' ? decodeURIComponent(m[i]) : m[i]
