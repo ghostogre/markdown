@@ -130,7 +130,7 @@
           // 那么 URL 地址会重置到 from 路由对应的地址。
           if (to === false || isError(to)) {
             // next(false) -> abort navigation, ensure current URL
-            this.ensureURL(true)
+            this.ensureURL(true) // 跳转操作确认（传入false就是replace）
             abort(to)
           } else if (
             typeof to === 'string' ||
@@ -222,6 +222,7 @@ function resolveQueue (
 
 ```
 function extractLeaveGuards (deactivated: Array<RouteRecord>): Array<?Function> {
+  // 设置了最后的一个true是倒序触发钩子
   return extractGuards(deactivated, 'beforeRouteLeave', bindGuard, true)
 }
 
@@ -229,6 +230,7 @@ function extractUpdateHooks (updated: Array<RouteRecord>): Array<?Function> {
   return extractGuards(updated, 'beforeRouteUpdate', bindGuard)
 }
 
+// 将生命周期绑定到组件实例上
 function bindGuard (guard: NavigationGuard, instance: ?_Vue): ?NavigationGuard {
   if (instance) {
     return function boundRouteGuard () {
@@ -244,6 +246,7 @@ function extractGuards (
   bind: Function,
   reverse?: boolean
 ): Array<?Function> {
+  // flatMapComponents返回组件的一些属性
   const guards = flatMapComponents(records, (def, instance, match, key) => {
     // 获取组件的 beforeRouteLeave 钩子函数
     const guard = extractGuard(def, name)
@@ -286,6 +289,7 @@ export function flatMapComponents (
 // 抹平数组得到一个一维数组
 export function flatten (arr: Array<any>): Array<any> {
   return Array.prototype.concat.apply([], arr)
+  // 如果参数 arr 是单个值，则 list 为 [ arr ]，如果是数组，则 list 就等于该数组
 }
 
 export function runQueue (queue: Array<?NavigationGuard>, fn: Function, cb: Function) {
