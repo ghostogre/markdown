@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<head>
+  <meta charset="utf-8">
+</head>
+
+<body>
+  <ul id="ul">
+    <li>1</li>
+    <li>2</li>
+    <li>3</li>
+  </ul>
+  <script>
+    function iteratorFactory(i) {
+      var click = function(e) {
+        alert(i + 1)
+      }
+      return click
+    }
+    var list = document.getElementById('ul').children
+    for (var i = 0; i < list.length; i++){
+      list[i].onclick = iteratorFactory(i)
+    }
+  </script>
+</body>

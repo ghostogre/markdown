@@ -60,8 +60,7 @@ export function normalizeLocation (
   }
 
   // relative params
-  // 如果是hashhistory，这里传的raw就是string，也就是说next.path存在
-  // 所以hash不会执行这里
+  // 如果是hashhistory，next.path存在，所以hash不会执行这里
   if (!next.path && next.params && current) {
     next = extend({}, next)
     next._normalized = true

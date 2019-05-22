@@ -46,11 +46,13 @@ export function createMatcher (
       if (typeof location.params !== 'object') {
         location.params = {}
       }
-      // 复制 currentRoute.params 到  location.params
+      // 复制 currentRoute.params 到 location.params
       if (currentRoute && typeof currentRoute.params === 'object') {
         for (const key in currentRoute.params) {
           // !(key in location.params)是防止重复的params，例如/:foo/:foo
-          // params是用于传参的!
+          // params是传入的
+          // 存在于当前的route，location没有传入，但是regex要求的params
+          // 比如赋值的操作是假如使用name + params的形式跳转，params可能没有传全，只能从当前route获取
           if (!(key in location.params) && paramNames.indexOf(key) > -1) {
             location.params[key] = currentRoute.params[key]
           }
@@ -64,11 +66,12 @@ export function createMatcher (
       }
     } else if (location.path) {
       // 处理非命名路由
-      location.params = {}
+      location.params = {} // 使用path的场合，push里再传入params是没有用的
       // 这里会遍历pathList，找到合适的record，因此命名路由的record查找效率更高
       for (let i = 0; i < pathList.length; i++) {
         const path = pathList[i]
         const record = pathMap[path]
+        // 因为匹配params，query等的关系，不能直接使用 == 来判断，必须判断regex
         if (matchRoute(record.regex, location.path, location.params)) {
           return _createRoute(record, location, redirectedFrom)
         }
@@ -202,7 +205,8 @@ function matchRoute (
     const key = regex.keys[i - 1]
     const val = typeof m[i] === 'string' ? decodeURIComponent(m[i]) : m[i]
     if (key) {
-      // Fix #1994: using * with props: true generates a param named 0
+      // 常规参数只会匹配被 / 分隔的 URL 片段中的字符。如果想匹配任意路径，我们可以使用通配符 (*)
+      // 当使用一个通配符时，$route.params 内会自动添加一个名为 pathMatch 参数。
       params[key.name || 'pathMatch'] = val
     }
   }
