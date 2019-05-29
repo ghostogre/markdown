@@ -32,8 +32,15 @@ export function _createElement (
   children?: any,
   normalizationType?: number
 ): VNode | Array<VNode> {
+  /*
+  * 如果存在data.__ob__，说明data是被Observer观察的数据
+  * 不能用作虚拟节点的data
+  * 需要抛出警告，并返回一个空节点
+  * 
+  * 被监控的data不能被用作vnode渲染的数据的原因是：data在vnode渲染过程中可能会被改变，这样会触发监控，导致不符合预期的操作
+  * 
+  */
   if (isDef(data) && isDef((data: any).__ob__)) {
-    // data存在并且data是被观察的对象
     process.env.NODE_ENV !== 'production' && warn(
       `Avoid using observed data object as vnode data: ${JSON.stringify(data)}\n` +
       'Always create fresh vnode data objects in each render!',
@@ -46,7 +53,7 @@ export function _createElement (
     tag = data.is
   }
   if (!tag) {
-    // in case of component :is set to falsy value
+    // 当is被设置成false，Vue将不会知道要把这个组件渲染成什么,所以渲染一个空节点
     return createEmptyVNode()
   }
   // warn against non-primitive key
@@ -80,6 +87,7 @@ export function _createElement (
   let vnode, ns
   if (typeof tag === 'string') {
     let Ctor
+    // 取到如果当前有自己的vnode和命名空间 或者 获取标签名的命名空间（ns是namespace的缩写）
     ns = (context.$vnode && context.$vnode.ns) || config.getTagNamespace(tag)
     if (config.isReservedTag(tag)) {
       // platform built-in elements
